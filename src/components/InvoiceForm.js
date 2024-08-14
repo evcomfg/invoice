@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import '../App.css'; // Ensure you have the App.css imported for styling
 
 function InvoiceForm() {
@@ -9,17 +9,17 @@ function InvoiceForm() {
     city: "",
     state: "",
     zipCode: "",
-    cartModel: "Base Cost (2) Golf Cart",
-    basePrice: 3850,
+    cartModel: "Fleet (2 Seater) Golf Cart",
+    basePrice: 6875,
     battery: "AMG batteries 150A-48 V (Standard)",
     battery_price: 0,
     addOns: [],
-    totalPrice: 3850,
+    totalPrice: 6875 * 1.05,
   });
 
   const [message, setMessage] = useState(""); // State to hold the response message
 
-  const [availableAddOns, setAvailableAddOns] = useState([
+  const initialAddOns = [
     { name: "Extra Speakers", price: 96 },
     { name: "Front Basket", price: 60 },
     { name: "Cooler", price: 72 },
@@ -36,7 +36,24 @@ function InvoiceForm() {
     { name: "Seats with folding armrest per row", price: 120 },
     { name: "Welcome Light and Stainless steel plate", price: 156 },
     { name: "Carbon Fiber", price: 162 },
-  ]);
+  ];
+
+  const [availableAddOns, setAvailableAddOns] = useState([]);
+
+  // Filter add-ons based on the default selected model when the component mounts
+  useEffect(() => {
+    if (formData.cartModel === "Fleet (2 Seater) Golf Cart") {
+      setAvailableAddOns(
+        initialAddOns.filter(addOn =>
+          addOn.name === "Cooler" ||
+          addOn.name === "Sand and seed bottles" ||
+          addOn.name === "Ball Washer"
+        )
+      );
+    } else {
+      setAvailableAddOns(initialAddOns);
+    }
+  }, [formData.cartModel]);
 
   const handleModelChange = (e) => {
     const selectedModel = e.target.value;
@@ -44,41 +61,53 @@ function InvoiceForm() {
 
     switch (selectedModel) {
       case "Fleet (2 Seater) Golf Cart":
-        basePrice = 3850;
+        basePrice = 6875;
         break;
       case "Personal (2+2 Seater) Non Lifted Golf Cart":
-        basePrice = 4150;
+        basePrice = 10867.80;
         break;
       case "Personal (2+2 Seater) Lifted Golf Cart":
-        basePrice = 4630;
+        basePrice = 11347.80;
         break;
       case "Personal (4+2 Seater) Non Lifted Golf Cart":
-        basePrice = 4600;
+        basePrice = 11317.80;
         break;
       case "Personal (4+2 Seater) Lifted Golf Cart":
-        basePrice = 5230;
+        basePrice = 11947.80;
         break;
       default:
-        basePrice = 3850;
+        basePrice = 6875;
     }
 
-    const updatedAddOns = availableAddOns.map((addOn) =>
-      addOn.name === "Carbon Fiber"
-        ? { ...addOn, price: selectedModel.includes("4+2") ? 180 : 162 }
-        : addOn
-    );
+    let updatedAddOns;
+    if (selectedModel === "Fleet (2 Seater) Golf Cart") {
+      updatedAddOns = initialAddOns.filter(addOn =>
+        addOn.name === "Cooler" ||
+        addOn.name === "Sand and seed bottles" ||
+        addOn.name === "Ball Washer"
+      );
+    } else {
+      updatedAddOns = initialAddOns.map((addOn) =>
+        addOn.name === "Carbon Fiber"
+          ? { ...addOn, price: selectedModel.includes("4+2") ? 180 : 162 }
+          : addOn
+      );
+    }
 
-    setAvailableAddOns(updatedAddOns);
-    const subtotal = basePrice + formData.battery_price + updatedAddOns.reduce((acc, addOn) => acc + addOn.price, 0);
-    const totalPrice = subtotal * 1.05;
+    // Calculate total price with tax
+    const totalPrice = basePrice * 1.05;
 
+    // Reset the formData's addOns array to an empty array (no add-ons selected)
     setFormData({
-        ...formData,
-        cartModel: selectedModel,
-        basePrice: basePrice,
-        addOns: updatedAddOns,
-        totalPrice: totalPrice,
+      ...formData,
+      cartModel: selectedModel,
+      basePrice: basePrice,
+      addOns: [], // Reset addOns to empty array
+      totalPrice: totalPrice, // Update totalPrice to include tax
     });
+
+    // Update the availableAddOns state to reflect updated options
+    setAvailableAddOns(updatedAddOns);
   };
 
   const handleBatteryChange = (e) => {
@@ -129,7 +158,7 @@ function InvoiceForm() {
     setMessage(""); // Clear any previous message
 
     try {
-      const response = await fetch("https://invoice-inky.vercel.app/api/invoice", {
+      const response = await fetch("https://invoice-backend-wheat.vercel.app/api/invoice", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,6 +170,7 @@ function InvoiceForm() {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
         window.open(url); // Open the PDF in a new tab
+        window.location.reload();
       } else {
         setMessage("Failed to generate the invoice.");
       }
@@ -149,6 +179,7 @@ function InvoiceForm() {
       setMessage("An error occurred while generating the invoice.");
     }
   };
+
   return (
     <form onSubmit={handleSubmit}>
       <h1>Golf Cart Invoice Form</h1>
@@ -203,11 +234,11 @@ function InvoiceForm() {
       <label>
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
-        <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $3,850.00</option>
-        <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $4,150.00</option>
-        <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $4,630.00</option>
-        <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $4,600.00</option>
-        <option value="Personal (4+2 Seater) Lifted Golf Cart">Personal (4+2 Seater) Lifted Golf Cart - $5,230.00</option>
+        <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $6,875.00</option>
+        <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $10,867.80</option>
+        <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $11,347.80</option>
+        <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $11,317.80</option>
+        <option value="Personal (4+2 Seater) Lifted Golf Cart">Personal (4+2 Seater) Lifted Golf Cart - $11,947.80</option>
         </select>
       </label>
       <label>
@@ -235,7 +266,7 @@ function InvoiceForm() {
           ))}
         </div>
       </div>
-      <p className="total-price">Total Price: ${formData.totalPrice.toFixed(2)}</p>
+      <p className="total-price">Total Price (incl. Tax): ${formData.totalPrice.toFixed(2)}</p>
       <button type="submit">Generate Invoice</button>
       {message && <p className={`message ${message.startsWith('Failed') ? 'error' : 'success'}`}>{message}</p>}
     </form>
