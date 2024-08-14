@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import '../App.css'; // Ensure you have the App.css imported for styling
 
 function InvoiceForm() {
+  const TAX_RATE = 0.0725;
+
   const [formData, setFormData] = useState({
     customerName: "",
     address1: "",
@@ -13,11 +15,19 @@ function InvoiceForm() {
     basePrice: 6875,
     battery: "AMG batteries 150A-48 V (Standard)",
     battery_price: 0,
+    paint: "Metallic/Matte Paint", // Default paint type
+    paintColor: "",
+    paintPrice: 60, // Default price for Metallic/Matte Paint
     addOns: [],
-    totalPrice: 6875 * 1.05,
+    totalPrice: 6875 * (1 + TAX_RATE),
   });
 
   const [message, setMessage] = useState(""); // State to hold the response message
+  const [availableAddOns, setAvailableAddOns] = useState([]);
+  const [paintOptions, setPaintOptions] = useState({
+    "Metallic/Matte Paint": { price: 60, colors: ["Red", "Black", "White"] },
+    "Chameleon Paint": { price: 360, colors: ["Blue", "Green", "Purple"] },
+  });
 
   const initialAddOns = [
     { name: "Extra Speakers", price: 96 },
@@ -32,15 +42,13 @@ function InvoiceForm() {
     { name: "Running Boards", price: 108 },
     { name: "DOT Fold down Windshield & Lighted Tag Brkt", price: 108 },
     { name: "Subwoofer", price: 108 },
-    { name: "Metallic/Matte Painting", price: 60 },
     { name: "Seats with folding armrest per row", price: 120 },
     { name: "Welcome Light and Stainless steel plate", price: 156 },
     { name: "Carbon Fiber", price: 162 },
+    { name: "Trifold Seat", price: 480 },
+    { name: "Premium Wheels", price: 123.20 },
   ];
 
-  const [availableAddOns, setAvailableAddOns] = useState([]);
-
-  // Filter add-ons based on the default selected model when the component mounts
   useEffect(() => {
     if (formData.cartModel === "Fleet (2 Seater) Golf Cart") {
       setAvailableAddOns(
@@ -50,10 +58,25 @@ function InvoiceForm() {
           addOn.name === "Ball Washer"
         )
       );
+      // Restrict paint options for 2-seater cart
+      setPaintOptions({
+        "Metallic/Matte Paint": { price: 60, colors: ["Red", "Black", "White"] }
+      });
     } else {
       setAvailableAddOns(initialAddOns);
+      // Include all paint options for other models
+      setPaintOptions({
+        "Metallic/Matte Paint": { price: 60, colors: ["Red", "Black", "White"] },
+        "Chameleon Paint": { price: 360, colors: ["Blue", "Green", "Purple"] }
+      });
     }
   }, [formData.cartModel]);
+
+  const calculateTotalPrice = (basePrice, batteryPrice, addOns, paintPrice) => {
+    const subtotal = basePrice + batteryPrice + addOns.reduce((acc, addOn) => acc + addOn.price, 0) + paintPrice;
+    const taxAmount = subtotal * TAX_RATE;
+    return subtotal + taxAmount;
+  };
 
   const handleModelChange = (e) => {
     const selectedModel = e.target.value;
@@ -79,23 +102,17 @@ function InvoiceForm() {
         basePrice = 6875;
     }
 
-    let updatedAddOns;
-    if (selectedModel === "Fleet (2 Seater) Golf Cart") {
-      updatedAddOns = initialAddOns.filter(addOn =>
-        addOn.name === "Cooler" ||
-        addOn.name === "Sand and seed bottles" ||
-        addOn.name === "Ball Washer"
-      );
-    } else {
-      updatedAddOns = initialAddOns.map((addOn) =>
-        addOn.name === "Carbon Fiber"
-          ? { ...addOn, price: selectedModel.includes("4+2") ? 180 : 162 }
-          : addOn
-      );
-    }
+    let updatedAddOns = initialAddOns.map((addOn) => {
+      if (addOn.name === "Carbon Fiber") {
+        return {
+          ...addOn,
+          price: selectedModel.includes("4+2") ? 180 : 162,
+        };
+      }
+      return addOn;
+    });
 
-    // Calculate total price with tax
-    const totalPrice = basePrice * 1.05;
+    const totalPrice = calculateTotalPrice(basePrice, formData.battery_price, [], formData.paintPrice);
 
     // Reset the formData's addOns array to an empty array (no add-ons selected)
     setFormData({
@@ -104,6 +121,9 @@ function InvoiceForm() {
       basePrice: basePrice,
       addOns: [], // Reset addOns to empty array
       totalPrice: totalPrice, // Update totalPrice to include tax
+      paint: selectedModel === "Fleet (2 Seater) Golf Cart" ? "Metallic/Matte Paint" : formData.paint,
+      paintColor: "",
+      paintPrice: selectedModel === "Fleet (2 Seater) Golf Cart" ? paintOptions["Metallic/Matte Paint"].price : formData.paintPrice,
     });
 
     // Update the availableAddOns state to reflect updated options
@@ -120,9 +140,7 @@ function InvoiceForm() {
       batteryPrice = 1320;
     }
 
-    const subtotal = formData.basePrice + batteryPrice + formData.addOns.reduce((acc, addOn) => acc + addOn.price, 0);
-    const taxAmount = subtotal * 0.05;
-    const totalPrice = subtotal + taxAmount;
+    const totalPrice = calculateTotalPrice(formData.basePrice, batteryPrice, formData.addOns, formData.paintPrice);
 
     setFormData({
       ...formData,
@@ -142,13 +160,37 @@ function InvoiceForm() {
       newAddOns = newAddOns.filter((addOn) => addOn.name !== addOnName);
     }
 
-    const subtotal = formData.basePrice + newAddOns.reduce((acc, addOn) => acc + addOn.price, 0) + (formData.battery === "Lithium 48V 5KW 105AH" ? 720 : formData.battery === "Lithium 72V 6.3 KW 105AH" ? 1320 : 0);
-    const taxAmount = subtotal * 0.05;
-    const totalPrice = subtotal + taxAmount;
+    const totalPrice = calculateTotalPrice(formData.basePrice, formData.battery_price, newAddOns, formData.paintPrice);
 
     setFormData({
       ...formData,
       addOns: newAddOns,
+      totalPrice: totalPrice,
+    });
+  };
+
+  const handlePaintChange = (e) => {
+    const selectedPaint = e.target.value;
+    const paintPrice = paintOptions[selectedPaint].price;
+
+    const totalPrice = calculateTotalPrice(formData.basePrice, formData.battery_price, formData.addOns, paintPrice);
+
+    setFormData({
+      ...formData,
+      paint: selectedPaint,
+      paintPrice: paintPrice,
+      paintColor: "",
+      totalPrice: totalPrice,
+    });
+  };
+
+  const handlePaintColorChange = (e) => {
+    const selectedColor = e.target.value;
+    const totalPrice = calculateTotalPrice(formData.basePrice, formData.battery_price, formData.addOns, formData.paintPrice);
+
+    setFormData({
+      ...formData,
+      paintColor: selectedColor,
       totalPrice: totalPrice,
     });
   };
@@ -234,11 +276,11 @@ function InvoiceForm() {
       <label>
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
-        <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $6,875.00</option>
-        <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $10,867.80</option>
-        <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $11,347.80</option>
-        <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $11,317.80</option>
-        <option value="Personal (4+2 Seater) Lifted Golf Cart">Personal (4+2 Seater) Lifted Golf Cart - $11,947.80</option>
+          <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $6,875.00</option>
+          <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $10,867.80</option>
+          <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $11,347.80</option>
+          <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $11,317.80</option>
+          <option value="Personal (4+2 Seater) Lifted Golf Cart">Personal (4+2 Seater) Lifted Golf Cart - $11,947.80</option>
         </select>
       </label>
       <label>
@@ -249,6 +291,26 @@ function InvoiceForm() {
           <option value="Lithium 72V 6.3 KW 105AH">Lithium 72V 6.3 KW 105AH - $1,320.00</option>
         </select>
       </label>
+      <label>
+        Paint Type:
+        <select name="paint" onChange={handlePaintChange} value={formData.paint}>
+          {Object.keys(paintOptions).map((paintType) => (
+            <option key={paintType} value={paintType}>
+              {paintType} - ${paintOptions[paintType].price.toFixed(2)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {formData.paint && (
+        <label>
+          Paint Color:
+          <select name="paintColor" onChange={handlePaintColorChange} value={formData.paintColor}>
+            {paintOptions[formData.paint].colors.map((color, index) => (
+              <option key={index} value={color}>{color}</option>
+            ))}
+          </select>
+        </label>
+      )}
       <div>
         <h3>Add-ons</h3>
         <div className="addons">
@@ -261,7 +323,7 @@ function InvoiceForm() {
                 />
                 {addOn.name}
               </label>
-              <span>${addOn.price}</span>
+              <span>${addOn.price.toFixed(2)}</span>
             </div>
           ))}
         </div>
