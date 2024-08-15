@@ -129,3 +129,17 @@ p.total-price {
   color: #721c24;
   border: 1px solid #f5c6cb;
 }
+.address-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.address-line label {
+  flex: 1;
+}
+
+.address-line input[type="text"] {
+  width: 100%;
+}
+

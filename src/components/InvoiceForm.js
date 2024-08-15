@@ -8,7 +8,7 @@ function InvoiceForm() {
   const [formData, setFormData] = useState({
     customerName: "",
     address1: "",
-    unit: "",
+    address2: "",
     city: "",
     state: "",
     zipCode: "",
@@ -271,37 +271,39 @@ function InvoiceForm() {
         />
       </label>
       <label>
-        Unit:
+        Address 2:
         <input
           type="text"
-          name="unit"
-          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+          name="address2"
+          onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
         />
       </label>
-      <label>
-        City:
-        <input
-          type="text"
-          name="city"
-          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-        />
-      </label>
-      <label>
-        State:
-        <input
-          type="text"
-          name="state"
-          onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-        />
-      </label>
-      <label>
-        ZIP Code:
-        <input
-          type="text"
-          name="zipCode"
-          onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-        />
-      </label>
+      <div className="address-line">
+    <label>
+      City:
+      <input
+        type="text"
+        name="city"
+        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+      />
+    </label>
+    <label>
+      State:
+      <input
+        type="text"
+        name="state"
+        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+      />
+    </label>
+    <label>
+      ZIP Code:
+      <input
+        type="text"
+        name="zipCode"
+        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+      />
+    </label>
+  </div>
       <label>
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
