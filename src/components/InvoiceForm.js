@@ -3,7 +3,7 @@ import '../App.css'; // Ensure you have the App.css imported for styling
 import cartImage from '../photos/cart.jpg'; // Import the image
 
 function InvoiceForm() {
-  const TAX_RATE = 0.0725;
+  const TAX_RATE = 0.0;
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -20,19 +20,20 @@ function InvoiceForm() {
     shippingState: "",
     shippingZipCode: "",
     cartModel: "Fleet (2 Seater) Golf Cart",
-    basePrice: 6875,
+    basePrice: 9398.15,
     battery: "AMG batteries 150A-48 V (Standard)",
     battery_price: 0,
-    paint: "Metallic/Matte Paint", // Default paint type
+    paint: "Standard Paint", // Default paint type
     paintColor: "Select Color", // Default color
-    paintPrice: 60, // Default price for Metallic/Matte Paint
+    paintPrice: 0, // Default price for Standard Paint
     addOns: [],
-    totalPrice: 6875 * (1 + TAX_RATE),
+    totalPrice: 9398.15 * (1 + TAX_RATE),
   });
 
   const [message, setMessage] = useState(""); // State to hold the response message
   const [availableAddOns, setAvailableAddOns] = useState([]);
   const [paintOptions, setPaintOptions] = useState({
+    "Standard Paint": { price: 0, colors: ["Select Color", "White", "Blue", "Green"] },
     "Metallic/Matte Paint": { price: 60, colors: ["Select Color", "Red", "Black", "White"] },
     "Chameleon Paint": { price: 360, colors: ["Select Color", "Blue", "Green", "Purple"] },
   });
@@ -53,19 +54,20 @@ function InvoiceForm() {
     { name: "Seats with folding armrest per row", price: 120 },
     { name: "Welcome Light and Stainless steel plate", price: 156 },
     { name: "Trifold Seat", price: 480 },
-    { name: "Premium Wheels", price: 123.20 },
+    { name: "Premium Wheels", price: 257.20 },
     { name: "Carbon Fibre I", price: 162 },
     { name: "Carbon Fibre II", price: 180 },
+    {name: "Upgraded Seat with Headrest", price:72}
   ];
 
   useEffect(() => {
     let filteredAddOns = initialAddOns.filter(addOn => {
       if (formData.cartModel === "Fleet (2 Seater) Golf Cart") {
-        return ["Cooler", "Sand and seed bottles", "Ball Washer"].includes(addOn.name);
+        return ["Cooler", "Sand and seed bottles", "Ball Washer", "Upgraded Seat with Headrest"].includes(addOn.name);
       } else if (["Personal (2+2 Seater) Non Lifted Golf Cart", "Personal (2+2 Seater) Lifted Golf Cart"].includes(formData.cartModel)) {
-        return addOn.name !== "Carbon Fibre II";
+        return addOn.name !== "Carbon Fibre II" && addOn.name !==  "Upgraded Seat with Headrest";
       } else if (["Personal (4+2 Seater) Non Lifted Golf Cart", "Personal (4+2 Seater) Lifted Golf Cart"].includes(formData.cartModel)) {
-        return addOn.name !== "Carbon Fibre I";
+        return addOn.name !== "Carbon Fibre I" && addOn.name !== "Upgraded Seat with Headrest";
       }
       return true;
     });
@@ -92,19 +94,21 @@ function InvoiceForm() {
     // Update paint options based on the selected cart model
     if (formData.cartModel === "Fleet (2 Seater) Golf Cart") {
       setPaintOptions({
+        "Standard Paint": { price: 0, colors: ["Select Color", "White", "Blue", "Green"] },
         "Metallic/Matte Paint": { price: 60, colors: ["Select Color", "Red", "Black", "White"] }
       });
       if (formData.paint === "Chameleon Paint") {
         setFormData({
           ...formData,
-          paint: "Metallic/Matte Paint",
+          paint: "Standard Paint",
           paintColor: "Select Color",
-          paintPrice: 60,
-          totalPrice: calculateTotalPrice(formData.basePrice, formData.battery_price, formData.addOns, 60),
+          paintPrice: 0,
+          totalPrice: calculateTotalPrice(formData.basePrice, formData.battery_price, formData.addOns, 0),
         });
       }
     } else {
       setPaintOptions({
+        "Standard Paint": { price: 0, colors: ["Select Color", "White", "Blue", "Green"] },
         "Metallic/Matte Paint": { price: 60, colors: ["Select Color", "Red", "Black", "White"] },
         "Chameleon Paint": { price: 360, colors: ["Select Color", "Blue", "Green", "Purple"] }
       });
@@ -124,7 +128,7 @@ function InvoiceForm() {
 
     switch (selectedModel) {
       case "Fleet (2 Seater) Golf Cart":
-        basePrice = 6875;
+        basePrice = 9398.15;
         break;
       case "Personal (2+2 Seater) Non Lifted Golf Cart":
         basePrice = 10867.80;
@@ -139,25 +143,25 @@ function InvoiceForm() {
         basePrice = 11947.80;
         break;
       default:
-        basePrice = 6875;
+        basePrice = 9398.15;
     }
 
+    // Reset the formData's addOns array to an empty array (no add-ons selected) and update the total price
     const totalPrice = calculateTotalPrice(basePrice, formData.battery_price, [], formData.paintPrice);
 
-    // Reset the formData's addOns array to an empty array (no add-ons selected)
     setFormData({
       ...formData,
       cartModel: selectedModel,
       basePrice: basePrice,
       addOns: [], // Reset addOns to empty array
       totalPrice: totalPrice, // Update totalPrice to include tax
-      paint: selectedModel === "Fleet (2 Seater) Golf Cart" ? "Metallic/Matte Paint" : formData.paint,
+      paint: selectedModel === "Fleet (2 Seater) Golf Cart" ? "Standard Paint" : formData.paint,
       paintColor: "Select Color",
-      paintPrice: selectedModel === "Fleet (2 Seater) Golf Cart" ? paintOptions["Metallic/Matte Paint"].price : formData.paintPrice,
+      paintPrice: selectedModel === "Fleet (2 Seater) Golf Cart" ? paintOptions["Standard Paint"].price : formData.paintPrice,
     });
 
     // Update the availableAddOns state to reflect updated options
-    setAvailableAddOns(initialAddOns);
+    setAvailableAddOns(initialAddOns.map(addOn => ({ ...addOn, selected: false })));
   };
 
   const handleBatteryChange = (e) => {
@@ -165,7 +169,7 @@ function InvoiceForm() {
     let batteryPrice = 0;
 
     if (selectedBattery === "Lithium 48V 5KW 105AH") {
-      batteryPrice = 720;
+      batteryPrice = 600;
     } else if (selectedBattery === "Lithium 72V 6.3 KW 105AH") {
       batteryPrice = 1320;
     }
@@ -243,6 +247,7 @@ function InvoiceForm() {
 
     try {
       const formattedPaint = `${formData.paint.split(" ")[0]} - ${formData.paintColor}`;
+      console.log(JSON.stringify(formData));
       const response = await fetch("https://invoice-backend-wheat.vercel.app/api/invoice", {
         method: "POST",
         headers: {
@@ -386,7 +391,7 @@ function InvoiceForm() {
       <label className="cart-model">
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
-          <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $6,875.00</option>
+          <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $9,398.15</option>
           <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $10,867.80</option>
           <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $11,347.80</option>
           <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $11,317.80</option>
@@ -397,7 +402,7 @@ function InvoiceForm() {
         Battery:
         <select name="battery" onChange={handleBatteryChange} value={formData.battery}>
           <option value="AMG batteries 150A-48 V (Standard)">AMG batteries 150A-48 V (Standard)</option>
-          <option value="Lithium 48V 5KW 105AH">Lithium 48V 5KW 105AH - $720.00</option>
+          <option value="Lithium 48V 5KW 105AH">Lithium 48V 5KW 105AH - $600.00</option>
           <option value="Lithium 72V 6.3 KW 105AH">Lithium 72V 6.3 KW 105AH - $1,320.00</option>
         </select>
       </label>
@@ -430,6 +435,7 @@ function InvoiceForm() {
                 <input
                   type="checkbox"
                   onChange={(e) => handleAddOnChange(e, addOn.name, addOn.price)}
+                  checked={formData.addOns.some((selectedAddOn) => selectedAddOn.name === addOn.name)} // Ensure the checkbox is in sync with formData
                 />
                 {addOn.name}
               </label>
@@ -438,11 +444,12 @@ function InvoiceForm() {
           ))}
         </div>
       </div>
-      <p className="total-price">Total Price (incl. Tax): ${formData.totalPrice.toFixed(2)}</p>
+      <p className="total-price">Total Price (excl. Tax): ${formData.totalPrice.toFixed(2)}</p>
       <img src={cartImage} alt="Golf Cart" className="cart-image" /> {/* Add the image here */}
       <button type="submit">Generate Invoice</button>
       {message && <p className={`message ${message.startsWith('Failed') ? 'error' : 'success'}`}>{message}</p>}
     </form>
   );
 }
+
 export default InvoiceForm;
