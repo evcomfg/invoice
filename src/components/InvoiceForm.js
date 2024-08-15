@@ -20,14 +20,14 @@ function InvoiceForm() {
     shippingState: "",
     shippingZipCode: "",
     cartModel: "Fleet (2 Seater) Golf Cart",
-    basePrice: 9398.15,
+    basePrice: 9465.00,
     battery: "AMG batteries 150A-48 V (Standard)",
     battery_price: 0,
     paint: "Standard Paint", // Default paint type
     paintColor: "Select Color", // Default color
     paintPrice: 0, // Default price for Standard Paint
     addOns: [],
-    totalPrice: 9398.15 * (1 + TAX_RATE),
+    totalPrice: 9465.00 * (1 + TAX_RATE),
   });
 
   const [message, setMessage] = useState(""); // State to hold the response message
@@ -391,7 +391,7 @@ function InvoiceForm() {
       <label className="cart-model">
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
-          <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $9,398.15</option>
+          <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $9,465.00</option>
           <option value="Personal (2+2 Seater) Non Lifted Golf Cart">Personal (2+2 Seater) Non Lifted Golf Cart - $10,867.80</option>
           <option value="Personal (2+2 Seater) Lifted Golf Cart">Personal (2+2 Seater) Lifted Golf Cart - $11,347.80</option>
           <option value="Personal (4+2 Seater) Non Lifted Golf Cart">Personal (4+2 Seater) Non Lifted Golf Cart - $11,317.80</option>
