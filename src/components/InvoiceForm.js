@@ -7,11 +7,18 @@ function InvoiceForm() {
 
   const [formData, setFormData] = useState({
     customerName: "",
-    address1: "",
-    address2: "",
-    city: "",
-    state: "",
-    zipCode: "",
+    billingAddress1: "",
+    billingAddress2: "",
+    billingCity: "",
+    billingState: "",
+    billingZipCode: "",
+    shippingAddressSame: "yes",
+    shippingCustomerName: "",
+    shippingAddress1: "",
+    shippingAddress2: "",
+    shippingCity: "",
+    shippingState: "",
+    shippingZipCode: "",
     cartModel: "Fleet (2 Seater) Golf Cart",
     basePrice: 6875,
     battery: "AMG batteries 150A-48 V (Standard)",
@@ -218,6 +225,13 @@ function InvoiceForm() {
     });
   };
 
+  const handleShippingAddressSameChange = (e) => {
+    setFormData({
+      ...formData,
+      shippingAddressSame: e.target.value
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(""); // Clear any previous message
@@ -253,7 +267,7 @@ function InvoiceForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h1>Golf Cart Invoice Form</h1>
+      <h2>Billing Address</h2>
       <label>
         Customer Name:
         <input
@@ -266,45 +280,110 @@ function InvoiceForm() {
         Address 1:
         <input
           type="text"
-          name="address1"
-          onChange={(e) => setFormData({ ...formData, address1: e.target.value })}
+          name="billingAddress1"
+          onChange={(e) => setFormData({ ...formData, billingAddress1: e.target.value })}
         />
       </label>
       <label>
         Address 2:
         <input
           type="text"
-          name="address2"
-          onChange={(e) => setFormData({ ...formData, address2: e.target.value })}
+          name="billingAddress2"
+          onChange={(e) => setFormData({ ...formData, billingAddress2: e.target.value })}
         />
       </label>
       <div className="address-line">
-    <label>
-      City:
-      <input
-        type="text"
-        name="city"
-        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-      />
-    </label>
-    <label>
-      State:
-      <input
-        type="text"
-        name="state"
-        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-      />
-    </label>
-    <label>
-      ZIP Code:
-      <input
-        type="text"
-        name="zipCode"
-        onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-      />
-    </label>
-  </div>
-      <label>
+        <label>
+          City:
+          <input
+            type="text"
+            name="billingCity"
+            onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })}
+          />
+        </label>
+        <label>
+          State:
+          <input
+            type="text"
+            name="billingState"
+            onChange={(e) => setFormData({ ...formData, billingState: e.target.value })}
+          />
+        </label>
+        <label>
+          ZIP Code:
+          <input
+            type="text"
+            name="billingZipCode"
+            onChange={(e) => setFormData({ ...formData, billingZipCode: e.target.value })}
+          />
+        </label>
+      </div>
+
+      <label className="shipping-question">
+        Shipping Address Same as Billing Address?
+        <select name="shippingAddressSame" onChange={handleShippingAddressSameChange} value={formData.shippingAddressSame}>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+      </label>
+
+      {formData.shippingAddressSame === "no" && (
+        <>
+          <h2>Shipping Address</h2>
+          <label>
+            Customer Name:
+            <input
+              type="text"
+              name="shippingCustomerName"
+              onChange={(e) => setFormData({ ...formData, shippingCustomerName: e.target.value })}
+            />
+          </label>
+          <label>
+            Address 1:
+            <input
+              type="text"
+              name="shippingAddress1"
+              onChange={(e) => setFormData({ ...formData, shippingAddress1: e.target.value })}
+            />
+          </label>
+          <label>
+            Address 2:
+            <input
+              type="text"
+              name="shippingAddress2"
+              onChange={(e) => setFormData({ ...formData, shippingAddress2: e.target.value })}
+            />
+          </label>
+          <div className="address-line">
+            <label>
+              City:
+              <input
+                type="text"
+                name="shippingCity"
+                onChange={(e) => setFormData({ ...formData, shippingCity: e.target.value })}
+              />
+            </label>
+            <label>
+              State:
+              <input
+                type="text"
+                name="shippingState"
+                onChange={(e) => setFormData({ ...formData, shippingState: e.target.value })}
+              />
+            </label>
+            <label>
+              ZIP Code:
+              <input
+                type="text"
+                name="shippingZipCode"
+                onChange={(e) => setFormData({ ...formData, shippingZipCode: e.target.value })}
+              />
+            </label>
+          </div>
+        </>
+      )}
+
+      <label className="cart-model">
         Cart Model:
         <select name="cartModel" onChange={handleModelChange} value={formData.cartModel}>
           <option value="Fleet (2 Seater) Golf Cart">Fleet (2 Seater) Golf Cart - $6,875.00</option>
@@ -314,7 +393,7 @@ function InvoiceForm() {
           <option value="Personal (4+2 Seater) Lifted Golf Cart">Personal (4+2 Seater) Lifted Golf Cart - $11,947.80</option>
         </select>
       </label>
-      <label>
+      <label className="battery-label">
         Battery:
         <select name="battery" onChange={handleBatteryChange} value={formData.battery}>
           <option value="AMG batteries 150A-48 V (Standard)">AMG batteries 150A-48 V (Standard)</option>
@@ -322,7 +401,7 @@ function InvoiceForm() {
           <option value="Lithium 72V 6.3 KW 105AH">Lithium 72V 6.3 KW 105AH - $1,320.00</option>
         </select>
       </label>
-      <label>
+      <label className="paint-label">
         Paint Type:
         <select name="paint" onChange={handlePaintChange} value={formData.paint}>
           {Object.keys(paintOptions).map((paintType) => (
@@ -333,7 +412,7 @@ function InvoiceForm() {
         </select>
       </label>
       {formData.paint && (
-        <label>
+        <label className="paint-color">
           Paint Color:
           <select name="paintColor" onChange={handlePaintColorChange} value={formData.paintColor}>
             {paintOptions[formData.paint].colors.map((color, index) => (
@@ -366,5 +445,4 @@ function InvoiceForm() {
     </form>
   );
 }
-
 export default InvoiceForm;
